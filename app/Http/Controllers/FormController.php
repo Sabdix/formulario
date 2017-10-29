@@ -68,7 +68,7 @@ class FormController extends Controller
 				if ($cont_aut_available > 1) {
 					$list_to_select = "";
 					for ($i = 1; $i < $cont_aut_available; $i++) {
-						$list_to_select . $person[$name][$i]->"nombres"; 
+						//$list_to_select . $person[$name][$i]->"nombres"; 
 					}
 					dd($list_to_select);
 				}
