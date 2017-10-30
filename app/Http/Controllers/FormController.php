@@ -3,7 +3,6 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Http\Controllers\Controller;
-use SimpleExcel\SimpleExcel;
 
 class FormController extends Controller
 {
@@ -25,8 +24,10 @@ class FormController extends Controller
 			$fileName = $_FILES['archivo']['tmp_name'];
 			$file = fopen($fileName, "r");
 			if ($file != null) {
-				while($data = fgetcsv($file, 1000, ";")) {
-					$csv[$contador] = explode(",", $data[0]);
+				while($data = fgetcsv($file, 1000, ",")) {
+					for ($l = 0; $l < count($data); $l++) {
+						$csv[$contador][$l] = $data[$l];
+					}
 					$contador++;
 				}
 			}
@@ -48,7 +49,6 @@ class FormController extends Controller
 				$people[$csv[$p][$encabezado_autor]][$csv[$p][0]] = $csv[$p];
 			}
 		}
-		//dd($people);
         $persona_array;
 		foreach ($people as $name => $value) {
 			// Obtener Personas
@@ -78,9 +78,9 @@ class FormController extends Controller
 						$list_to_select[$i] = $nombre;
 					}
 				}
+			}
 		}
-		//dd($person);
+		dd($person);
 		return view ('repositorios', ['persona' => $persona_array], ['file'=>$csv] );
-	}
     }
 }

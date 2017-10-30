@@ -15,7 +15,7 @@
 			<th>Tipo de Persona</th>
 		</tr>
 		<tr>
-			@if(isset($persona))
+			@if(isset($persona) && count($persona) != 0)
 					<td>{{ $persona[0]->idOrcid }}</td>
 					<td>{{ $persona[0]->idPersona }}</td>
 					<td>{{ $persona[0]->nombres }}</td>

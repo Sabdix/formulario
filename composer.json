@@ -7,7 +7,7 @@
     "require": {
         "php": ">=5.5.9",
         "laravel/framework": "5.1.*",
-        "faisalman/simple-excel-php" : "0.3.*"
+        "faisalman/simple-excel-php": "0.3.*"
     },
     "require-dev": {
         "fzaninotto/faker": "~1.4",
