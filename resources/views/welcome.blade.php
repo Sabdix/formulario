@@ -15,7 +15,7 @@
 						<legend>Archivo</legend>
 						{!! csrf_field() !!}
 						Abrir Archivo .csv: <br>
-						<input type="file" name="archivo" accept=".csv" id="archivo">
+						<input type="file" name="file" accept=".csv" id="file">
 						<br><br>
 					</fieldset>
 					<fieldset>
@@ -25,15 +25,15 @@
                         <select required name="rights" id="rights" onchange="mostrar(this.value)">
                             <option selected="0">Elige una</option>
                             @if(isset($licencia))
-                            @forelse($licencia as $l)
+                            @forelse($licence as $l)
                             <option value="{{$l->idLicencia}}">{{$l->descCorta}}</option>
                             @empty
                             <option>No se pudieron obtener las licencias</option>
                             @endforelse
                             @endif
                         </select><br><br>
-                        @if(isset($licencia))
-                        @forelse($licencia as $l)
+                        @if(isset($licence))
+                        @forelse($licence as $l)
                         <span class="desc" id="{{$l->idLicencia}}" style="display: none">{{$l->descripcion}}</span>
                         @empty
                         <span>No se encontro</span>

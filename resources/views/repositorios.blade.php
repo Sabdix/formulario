@@ -15,12 +15,19 @@
 			<th>Tipo de Persona</th>
 		</tr>
 		<tr>
-			@if(isset($persona) && count($persona) != 0)
-					<td>{{ $persona[0]->idOrcid }}</td>
-					<td>{{ $persona[0]->idPersona }}</td>
-					<td>{{ $persona[0]->nombres }}</td>
-					<td>{{ $persona[0]->primerApellido }}</td>
-					<td>{{ $persona[0]->tipoPersona }}</td>
+			@if(isset($person) && count($person) != 0)
+				{{ dd($person) }}
+				@foreach($person as $p=>$value)
+					@if(count($p))
+						<tr>
+							<td>{{ $value->idOrcid }}</td>
+							<td>{{ $value->idPersona }}</td>
+							<td>{{ $value->nombres }}</td>
+							<td>{{ $value->primerApellido }}</td>
+							<td>{{ $value->tipoPersona }}</td>
+						</tr>
+					@endif
+				@endforeach
             @endif
 		</tr>
 	</table>
