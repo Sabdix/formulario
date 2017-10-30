@@ -49,6 +49,7 @@ class FormController extends Controller
 			}
 		}
 		//dd($people);
+        $persona_array;
 		foreach ($people as $name => $value) {
 			// Obtener Personas
 
@@ -66,16 +67,20 @@ class FormController extends Controller
 				$person[$name] = $persona_array;
 				$cont_aut_available = count($person[$name]);
 				if ($cont_aut_available > 1) {
-					$list_to_select = "";
+					$list_to_select;
 					for ($i = 1; $i < $cont_aut_available; $i++) {
-						//$list_to_select . $person[$name][$i]->"nombres"; 
+                        $nombre = "";
+                        $nombre .= $person[$name][$i]->nombres . " ";
+                        $nombre .= $person[$name][$i]->primerApellido;
+                        if( isset($person[$name][$i]->segundoApellido)){
+                            $nombre .= $person[$name][$i]->segundoApellido;
+                        }                        
+						$list_to_select[$i] = $nombre;
 					}
-					dd($list_to_select);
 				}
-				dd($person[$name]);
-			}
 		}
-		//($person);
-		return view ('repositorios', ['persona' => $persona_array], ['file'=>$csv]);
+		//dd($person);
+		return view ('repositorios', ['persona' => $persona_array], ['file'=>$csv] );
 	}
+    }
 }
