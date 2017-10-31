@@ -47,22 +47,46 @@ class FormController extends Controller
 				$people[$csv[$p][$header_author]][$csv[$p][0]] = $csv[$p];
 			}
 		}
+		// Consulta a Conacyt
         $counter = 0;
 		foreach ($people as $name => $value) {
-			$person_array[$counter] = $this->consultPerson($name);
+			$person_array[$this->consultPerson(trim($name))][$csv[$counter + 1][0]] = "Si";
 			$counter++;
 		}
-		// person_array contiene el nombre de todos las personas
-		dd($person_array);
+		//dd($person_array);
+		// person_array contiene el nombre de todos las personas ya buscadas
 
+// __________________________________________________________________________________
 		// Obtener Colaboradores
+		$counter = 1;
 		for ($a = 0; $a < count($csv[0],0); $a++) {
-			if (strcmp($csv[0][$a], "Colabora con") == 0) {
+			if (strcmp($csv[0][$a], "Colectado con") == 0) {
 				$header_colaborator = $a;
 				break;
 			}	
 		}
-		//dd($person_array);
+		// Obtenemos la lista de colaboradores
+		foreach ($people as $name => $field) {
+			for ($i=0; $i < count($people[$name],0); $i++) {
+				$colaborator_array[$counter] = explode(",", $people[$name][$counter][$header_colaborator]);
+				$counter++;
+			}
+		}
+		// Quitamos los colaboradores repetidos
+		$colaborator_people;
+		foreach ($colaborator_array as $id => $array) {
+			for ($r=0; $r < count($array); $r++) {
+				$colaborator_people[$array[$r]] = 0;
+			}
+		}
+		// COnsulta a Conacyt
+		$counter = 0;
+		foreach ($colaborator_people as $name => $val) {
+			$colaborator_collection[$counter] = $this->consultPerson(trim($name));
+			$counter++;
+		}
+		dd($colaborator_collection);
+		// colaborator_collection contiene el nombre de los colaboradores ya buscados
 
 		return view ('repositorios', ['person' => $person_array], ['file'=>$csv] );
     }
