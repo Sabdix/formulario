@@ -6,18 +6,25 @@ use App\Http\Controllers\Controller;
 
 class FormController extends Controller
 {
+    private $response;
+    private $fileOriginal;
+
+    function __construct(){
+        $this->response = new \stdClass();
+    }
+    
 	public function index() {
 		$licences_json = file_get_contents("http://catalogs.repositorionacionalcti.mx/webresources/licencia");
 		$licences_array = json_decode($licences_json);
 		return view('welcome', ['licence' =>$licences_array], ['array_licence' => $licences_json]);
 	}
 	
-	public function consultarRepo() {
+	public function consultarRepo(Request $request) {
 		ini_set('max_execution_time', 240); //240 segundos = 4 minutos
 		$counter = 0;
 		$csv;
 		
-		// Parsear CSV
+//----------------------------------------- Parsear CSV --------------------------------------------------------
 		if (isset($_FILES['file']) && $_FILES['file']['type'] == "application/vnd.ms-excel") {
 			$fileName = $_FILES['file']['tmp_name'];
 			$file = fopen($fileName, "r");
@@ -26,46 +33,124 @@ class FormController extends Controller
 					for ($l = 0; $l < count($data); $l++) {
 						$csv[$counter][$l] = $data[$l];
 					}
-					$counter++;
+                    $counter++;
 				}
 			}
-		}
-		// Aqui contamos la cantidad de registros del csv
+		} else {
+          dd("No se ha seleccionado un arhivo, favor de seleccionarlo");  
+        }
+        
+//-------------------------------- Aqui contamos la cantidad de registros del csv -------------------------------
 		$cont = count($csv, 0);
-		$people;
-		$header_author;
-		// Verificamos la ubicación de Identifica
+        
+//-------------------------------- Obteniendo ubicaciones dentro del csv ----------------------------------------
+        // Obtenemos la ubicación de Identifica o autor
+        $header_author;
 		for ($a = 0; $a < count($csv[0],0); $a++) {
 			if (strcmp($csv[0][$a], "Identifica") == 0) {
 				$header_author = $a;
 				break;
 			}
 		}
-		// Quitar registros Blancos
-		for ($p = 1; $p < $cont; $p++) {
-			if (strcmp($csv[$p][$header_author], "") !== 0) {
-				$people[$csv[$p][$header_author]][$csv[$p][0]] = $csv[$p];
+        
+        //Obtenemos la ubicación de la fecha de colecta | registro
+        $header_date;
+        for ($a = 0; $a < count($csv[0],0); $a++) {
+			if (strcmp($csv[0][$a], "Fecha") == 0) {
+				$header_date = $a;
+				break;
 			}
 		}
-		// Consulta a Conacyt
-        $counter = 0;
-		foreach ($people as $name => $value) {
-			$person_array[$this->consultPerson(trim($name))][$csv[$counter + 1][0]] = "Si";
-			$counter++;
-		}
-		//dd($person_array);
-		// person_array contiene el nombre de todos las personas ya buscadas
-
-// __________________________________________________________________________________
-		// Obtener Colaboradores
-		$counter = 1;
+            
+        //Obtenemos la ubicación de los colaboradores
+        //$counter = 1;
+        $header_colaborator;
 		for ($a = 0; $a < count($csv[0],0); $a++) {
 			if (strcmp($csv[0][$a], "Colectado con") == 0) {
 				$header_colaborator = $a;
 				break;
 			}	
 		}
+        
+        //Obtenemos la posición del resumen o descripcion
+        for ($a = 0; $a < count($csv[0],0); $a++) {
+			if (strcmp($csv[0][$a], "Observaciones") == 0) {
+				$header_description = $a;
+				break;
+			}	
+		}
+        
+//---------------------------- Quitar registros Blancos y factorizamos los registros por autor -----------------------
+ 		for ($p = 1; $p < $cont; $p++) {
+			if (strcmp($csv[$p][$header_author], "") !== 0) {
+				$people[$csv[$p][$header_author]][$csv[$p][0]] = $csv[$p];
+			}
+		}
+        
+//-----------------------------------------Obtener metadatos ----------------------------------------------------------
+         //-------------------------------metadatos generales--------------------------------------------
+        
+        //Obtenmos el titulo (del dataset seleccionado en el formulario de welcome.blade)
+        $title  = $request->input('title');
+        
+        //Obtemos el editor (del login de un inicio)
+        $publisher = "";
+        
+         //Obtenemos la condicion de licencia, seleccionada desde un inicio en el formulario
+        $rights = $request->input('rights');
+        if(strcmp($rights, "Elige una") != 0){
+            $this->response->rights = $rights;
+        } else {
+            dd("No se eligio el tipo de licencia, favor de seleccionarla");
+        }
+        
+        //----------------------------metadatos por registro---------------------------------------------
+        $counter = 0;
+        //dd(fgetcsv($file, 1000, ","));
+        $file = fopen($fileName, "r");
+        if ($file != null) {
+			while($data = fgetcsv($file, 1000, ",")) {
+                if($counter != 0){//nos saltamos la primer linea
+                    for ($l = 0; $l < count($data); $l++) {
+                        $csv[$counter][$l] = $data[$l];
+                        // Autor
+                        if($l == $header_author){
+                            $author = $data[$l];
+                        }
+                
+                        //Identificador del recurso , pendiente a hacerlo
+        
+                        //Fecha de colecta | registro
+        
+                        //Año *pendiente
+            
+                        //Colaboradores
+        
+                        //Identificador relacionado, pendiente
+        
+                        //Resumen o descripcion
+                        
+                    
+				    }
+                }
+                $counter++;
+            }   
+        }
+        
+        
+// Consulta a Conacyt de autores
+        $counter = 1;
+		foreach ($people as $name => $value) {
+			$person_array[$this->consultPerson(trim($name))][$csv[$counter][0]] = "Si";
+			$counter++;
+		}
+        // person_array contiene el nombre de todos las personas ya buscadas
+        
+// __________________________________________________________________________________
+		// Obtener Colaboradores
+
 		// Obtenemos la lista de colaboradores
+        $counter = 1;
 		foreach ($people as $name => $field) {
 			for ($i=0; $i < count($people[$name],0); $i++) {
 				$colaborator_array[$counter] = explode(",", $people[$name][$counter][$header_colaborator]);
@@ -85,10 +170,14 @@ class FormController extends Controller
 			$colaborator_collection[$counter] = $this->consultPerson(trim($name));
 			$counter++;
 		}
-		dd($colaborator_collection);
+		//dd($colaborator_collection);
 		// colaborator_collection contiene el nombre de los colaboradores ya buscados
-
-		return view ('repositorios', ['person' => $person_array], ['file'=>$csv] );
+        
+        $this->response->person = $person_array;
+        $this->response->file = $csv;
+        $this->response->title = $title;
+        $this->response->author = $author;
+		return view ('repositorios', ['response' => $this->response]);
     }
 
     private function consultPerson($name) {
@@ -115,7 +204,9 @@ class FormController extends Controller
 				$list_to_select;
 				for ($i = 1; $i < $cont_aut_available; $i++) {
                     $nametmp .= $person[$name][$i]->nombres . " ";
-                    $nametmp .= $person[$name][$i]->primerApellido;
+                    if( isset($person[$name][$i]->primerApellido)){
+                        $nametmp .= $person[$name][$i]->primerApellido;
+                    }
                     if( isset($person[$name][$i]->segundoApellido)){
                         $nametmp .= $person[$name][$i]->segundoApellido;
                     }                        
